@@ -77,54 +77,55 @@ class MainActivity : AppCompatActivity() {
 
 
     private fun obtainCurrentLocation() {
+
+        val locationCallback = object : LocationCallback() {
+            override fun onLocationAvailability(p0: LocationAvailability?) {
+                super.onLocationAvailability(p0)
+            }
+
+            override fun onLocationResult(p0: LocationResult?) {
+                super.onLocationResult(p0)
+                /**
+                 *
+                 * RECIEVE LOCTION HERE!!!!
+                 *
+                 * */
+                latlong.text = "${p0!!.lastLocation.latitude}, ${p0!!.lastLocation.longitude}"
+            }
+        }
+
+        val connectionCallback = object : GoogleApiClient.ConnectionCallbacks {
+
+            override fun onConnected(p0: Bundle?) {
+
+                val locationRequest = LocationRequest()
+
+                locationRequest.interval = 1000
+                locationRequest.fastestInterval = 1000
+
+                /**
+                 *  SET LOCATION PRIORITY...
+                 *  LocationRequest.PRIORITY_HIGH_ACCURACY
+                 *  LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+                 *  LocationRequest.PRIORITY_LOW_POWER
+                 *  more..
+                 */
+                locationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
+
+                if (ContextCompat.checkSelfPermission(this@MainActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    LocationServices.getFusedLocationProviderClient(this@MainActivity)
+                        .requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper())
+                }
+            }
+
+            override fun onConnectionSuspended(p0: Int) {
+            }
+
+        }
+
+
         val apiClient = GoogleApiClient.Builder(this)
-            .addConnectionCallbacks(object : GoogleApiClient.ConnectionCallbacks {
-
-                override fun onConnected(p0: Bundle?) {
-
-                    val locationRequest = LocationRequest()
-
-                    locationRequest.interval = 1000
-                    locationRequest.fastestInterval = 1000
-
-                    /**
-                     *  SET LOCATION PRIORITY...
-                     *  LocationRequest.PRIORITY_HIGH_ACCURACY
-                     *  LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-                     *  LocationRequest.PRIORITY_LOW_POWER
-                     *  more..
-                     */
-                    locationRequest.priority = LocationRequest.PRIORITY_BALANCED_POWER_ACCURACY
-
-                    if (ContextCompat.checkSelfPermission(
-                            this@MainActivity,
-                            Manifest.permission.ACCESS_FINE_LOCATION
-                        )
-                        == PackageManager.PERMISSION_GRANTED
-                    ) {
-                        LocationServices.getFusedLocationProviderClient(this@MainActivity)
-                            .requestLocationUpdates(locationRequest, object : LocationCallback() {
-                                override fun onLocationAvailability(p0: LocationAvailability?) {
-                                    super.onLocationAvailability(p0)
-                                }
-
-                                override fun onLocationResult(p0: LocationResult?) {
-                                    super.onLocationResult(p0)
-                                    /**
-                                     *
-                                     * RECIEVE LOCTION HERE!!!!
-                                     *
-                                     * */
-                                    latlong.text = "${p0!!.lastLocation.latitude}, ${p0!!.lastLocation.longitude}"
-                                }
-                            }, Looper.getMainLooper())
-                    }
-                }
-
-                override fun onConnectionSuspended(p0: Int) {
-                }
-
-            })
+            .addConnectionCallbacks(connectionCallback)
             .addApi(LocationServices.API)
             .build()
 
